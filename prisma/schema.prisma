@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+}
+
+datasource db {
+  provider     = "mysql"
+  relationMode = "prisma"
+  url          = env("DATABASE_URL")
+}
+
+model Category {
+  id     String @id @default(uuid())
+  name   String
+  Allies Ally[]
+}
+
+model Ally {
+  id           String   @id @default(uuid())
+  name         String   @db.Text
+  category     Category @relation(fields: [categoryId], references: [id])
+  categoryId   String
+  src          String
+  userId       String
+  userName     String
+  description  String
+  instructions String   @db.Text
+  seed         String   @db.Text
+  messages     Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@fulltext([name])
+}
+
+enum Role {
+  user 
+  system
+}
+
+model Message  {
+  id       String   @id @default(uuid())
+  content  String   @db.Text
+  userId   String
+  allyId   String
+  role     Role
+
+  ally     Ally    @relation(fields: [allyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+
+  @@index([allyId])
+}
+
+model UserSubscription {
+  id          String   @id @default(uuid())
+  userId       String  @unique
+  stripeCustomerId String? @unique @map(name: "stripe_customer_id")
+  stripeSubscriptionId String? @unique @map(name: "stripe_subscription_id")
+  stripePriceId String? @unique @map(name: "stripe_price_id")
+  stripeCurrentPeriodEnd DateTime? @unique @map(name: "stripe_current_period_id")
+}
